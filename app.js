@@ -1,24 +1,40 @@
+// file path
 const TARGET_CORPS_FILE_PATH = './targetCorps/targetCorps.csv'
 const ALL_DATA_FILE_PATH = './allData/allData.csv'
-const fs = require('fs')
-const {
-  csvToJson
-} = require('./csvToJson')
 
+// import modules
+const fs = require('fs')
+const mkdirp = require('mkdirp')
+const Json2csvParser = require('json2csv').Parser
+
+//import functions
+const {csvToJson} = require('./csvToJson')
+const {getDateTime} = require('./getDateTime')
+
+// settings
 const setting = {
   maxNum: 1.25,
   minNum: 0.75
 }
 
-let targetCorp = {
-  '行業別': '水泥工業',
-  '年': '2010',
-  '股東權益總額': 200,
-  '資產總額': 400,
-  '市值': 600
-}
+const fields = [
+  '公司',
+  '簡稱',
+  '行業別',
+  "年",
+  "股東權益總額",
+  "資產總額",
+  "市值",
+  "與目標<股東權益總額>差距比例",
+  "與目標<資產總額>差距比例",
+  "與目標<市值>差距比例"
+];
 
-async function init(targetObj) {
+const json2csvParser = new Json2csvParser({fields});
+
+init()
+
+async function init() {
   try {
     //取得目標公司資料
     const targetCorps = await csvToJson(TARGET_CORPS_FILE_PATH)
@@ -29,13 +45,12 @@ async function init(targetObj) {
     //宣告預估擷取資料陣列
     let filteredDataArr = []
 
-
     targetCorps.map((item, index) => {
       //依照目標公司資料擷取全部資料中的相關資料
       filteredData = filterData(allData, item)
       //放入目標公司名稱
       filteredData = {
-        name: item['公司'],
+        name: item['公司'] + item['代碼'],
         data: filteredData
       }
       //放到擷取資料陣列
@@ -44,15 +59,22 @@ async function init(targetObj) {
 
     //輸出json檔案
     filteredDataArr.forEach(item => {
-      fs.writeFileSync(`./out/${item.name}.json`, JSON.stringify(item, null, 2));
+      mkdirp(`./out/${getDateTime()}`, err => {
+        if (err) 
+          console.log(err)
+        else 
+          console.log('new file folder ready!')
+      });
+      // fs.writeFileSync(`./out/${getDateTime()}/${item.name}.json`,
+      // JSON.stringify(item, null, 2));
+      const csvFile = json2csvParser.parse(item.data)
+      fs.writeFileSync(`./out/${getDateTime()}/${item.name}.csv`, csvFile, 'utf8')
     })
 
   } catch (err) {
     console.log(err)
   }
 }
-
-init(targetCorp)
 
 /**
  * 依照目標資料的條件過濾資料
@@ -69,21 +91,18 @@ function filterData(allData, targetObj) {
     let yearStatus
 
     if (targetObj['股東權益總額'] !== '') {
-      equtityStatus =
-        item['股東權益總額'] > targetObj['股東權益總額'] * setting.minNum &&
-        item['股東權益總額'] < targetObj['股東權益總額'] * setting.maxNum
+      equtityStatus = item['股東權益總額'] > targetObj['股東權益總額'] * setting.minNum && item['股東權益總額'] < targetObj['股東權益總額'] * setting.maxNum
+      item['與目標<股東權益總額>差距比例'] = item['股東權益總額'] / targetObj['股東權益總額'] * 100 + '%'
     }
 
     if (targetObj['資產總額'] !== '') {
-      assetStatus =
-        item['資產總額'] > targetObj['資產總額'] * setting.minNum &&
-        item['資產總額'] < targetObj['資產總額'] * setting.maxNum
+      assetStatus = item['資產總額'] > targetObj['資產總額'] * setting.minNum && item['資產總額'] < targetObj['資產總額'] * setting.maxNum
+      item['與目標<資產總額>差距比例'] = item['資產總額'] / targetObj['資產總額'] * 100 + '%'
     }
 
     if (targetObj['市值'] !== '') {
-      priceStatus =
-        item['市值'] > targetObj['市值'] * setting.minNum &&
-        item['市值'] < targetObj['市值'] * setting.maxNum
+      priceStatus = item['市值'] > targetObj['市值'] * setting.minNum && item['市值'] < targetObj['市值'] * setting.maxNum
+      item['與目標<市值>差距比例'] = item['市值'] / targetObj['市值'] * 100 + '%'
     }
 
     if (targetObj['行業別'] !== '') {
