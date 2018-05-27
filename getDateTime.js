@@ -7,15 +7,8 @@ module.exports = {
             ? "0"
             : "") + hour;
 
-        let min = date.getMinutes();
-        min = (min < 10
-            ? "0"
-            : "") + min;
-
-        let sec = date.getSeconds();
-        sec = (sec < 10
-            ? "0"
-            : "") + sec;
+        // let min = date.getMinutes(); min = (min < 10     ? "0"     : "") + min; let
+        // sec = date.getSeconds(); sec = (sec < 10     ? "0"     : "") + sec;
 
         let year = date.getFullYear();
 
@@ -29,6 +22,6 @@ module.exports = {
             ? "0"
             : "") + day;
 
-        return `${year}-${month}-${day}_${hour}-${min}-${sec}`
+        return `${year}-${month}-${day}_${hour}`
     }
 }

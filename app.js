@@ -1,5 +1,5 @@
 // file path
-const TARGET_CORPS_FILE_PATH = './targetCorps/targetCorps.csv'
+const TARGET_CORPS_FILE_PATH = './targetCorps/targetCorps.all.csv'
 const ALL_DATA_FILE_PATH = './allData/allData.csv'
 
 // import modules
@@ -13,21 +13,22 @@ const {getDateTime} = require('./getDateTime')
 
 // settings
 const setting = {
+  gap: 0.55,
   maxNum: 1.25,
   minNum: 0.75
 }
 
 const fields = [
+  '代碼',
   '公司',
-  '簡稱',
-  '行業別',
+  '產業',
   "年",
-  "股東權益總額",
-  "資產總額",
   "市值",
-  "與目標<股東權益總額>差距比例",
-  "與目標<資產總額>差距比例",
-  "與目標<市值>差距比例"
+  "股價淨值比",
+  "資產",
+  "與目標<市值>差距比例",
+  "與目標<資產>差距比例",
+  "與目標<股價淨值比>差距比例"
 ];
 
 const json2csvParser = new Json2csvParser({fields});
@@ -50,14 +51,14 @@ async function init() {
       filteredData = filterData(allData, item)
       //放入目標公司名稱
       filteredData = {
-        name: item['公司'] + item['代碼'],
+        name: item['公司'] + item['代碼'] + "-" + item['年'],
         data: filteredData
       }
       //放到擷取資料陣列
       filteredDataArr.push(filteredData)
     })
 
-    //輸出json檔案
+    //輸出檔案
     filteredDataArr.forEach(item => {
       mkdirp(`./out/${getDateTime()}`, err => {
         if (err) 
@@ -90,32 +91,36 @@ function filterData(allData, targetObj) {
     let catagoryStatus
     let yearStatus
 
-    if (targetObj['股東權益總額'] !== '') {
-      equtityStatus = item['股東權益總額'] > targetObj['股東權益總額'] * setting.minNum && item['股東權益總額'] < targetObj['股東權益總額'] * setting.maxNum
-      item['與目標<股東權益總額>差距比例'] = item['股東權益總額'] / targetObj['股東權益總額'] * 100 + '%'
+    if (item['股價淨值比'] !== '') {
+      equtityStatus = targetObj['股價淨值比'] - item['股價淨值比'] <= Math.abs(targetObj['股價淨值比'] * setting.gap)
     }
 
-    if (targetObj['資產總額'] !== '') {
-      assetStatus = item['資產總額'] > targetObj['資產總額'] * setting.minNum && item['資產總額'] < targetObj['資產總額'] * setting.maxNum
-      item['與目標<資產總額>差距比例'] = item['資產總額'] / targetObj['資產總額'] * 100 + '%'
+    if (item['資產'] !== '') {
+      assetStatus = targetObj['資產'] - item['資產'] <= Math.abs(targetObj['資產'] * setting.gap)
     }
 
-    if (targetObj['市值'] !== '') {
-      priceStatus = item['市值'] > targetObj['市值'] * setting.minNum && item['市值'] < targetObj['市值'] * setting.maxNum
-      item['與目標<市值>差距比例'] = item['市值'] / targetObj['市值'] * 100 + '%'
+    if (item['市值'] !== '') {
+      priceStatus = targetObj['市值'] - item['市值'] <= Math.abs(targetObj['市值'] * setting.gap)
     }
 
-    if (targetObj['行業別'] !== '') {
-      catagoryStatus = item['行業別'] == targetObj['行業別']
+    if (item['產業'] !== '') {
+      catagoryStatus = item['產業'] == targetObj['產業']
     }
 
-    if (targetObj['年'] !== '') {
+    if (item['年'] !== '') {
       yearStatus = item['年'] == targetObj['年']
     }
 
-    let statusArr = [equtityStatus, assetStatus, priceStatus, catagoryStatus, yearStatus]
+    if (item['代碼'] !== '') {
+      catagoryStatus = item['代碼'] == targetObj['代碼']
+    }
+
+    let statusArr = [equtityStatus, assetStatus, priceStatus, yearStatus, catagoryStatus]
 
     if (statusArr.filter(item => item).length === 5) {
+      item['與目標<股價淨值比>差距比例'] = item['股價淨值比'] / targetObj['股價淨值比'] * 100 + '%'
+      item['與目標<資產>差距比例'] = item['資產'] / targetObj['資產'] * 100 + '%'
+      item['與目標<市值>差距比例'] = item['市值'] / targetObj['市值'] * 100 + '%'
       return true
     } else {
       return false
