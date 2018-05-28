@@ -74,14 +74,29 @@ async function init() {
         })
       }
 
+      if (!fs.existsSync(`./out/${getDateTime()}/noRef`)) mkdirp(`./out/${getDateTime()}/noRef`)
+      if (!fs.existsSync(`./out/${getDateTime()}/ref`)) mkdirp(`./out/${getDateTime()}/ref`)
+
       // fs.writeFileSync(`./out/${getDateTime()}/${item.name}.json`,
       // JSON.stringify(item, null, 2));
+
       const csvFile = json2csvParser.parse(item.data)
-      fs.writeFileSync(
-        `./out/${getDateTime()}/${index + 1}-${item.name}.csv`,
-        csvFile,
-        'utf8'
-      )
+
+      if (item.data.length === 1) {
+        fs.writeFileSync(
+          `./out/${getDateTime()}/noRef/${index + 1}-${item.name}.csv`,
+          csvFile,
+          'utf8'
+        )
+      } else {
+        fs.writeFileSync(
+          `./out/${getDateTime()}/ref/${index + 1}-${item.name}.csv`,
+          csvFile,
+          'utf8'
+        )
+      }
+
+
     })
   } catch (err) {
     console.log(err)
