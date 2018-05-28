@@ -20,6 +20,7 @@ const SETTING = {
   GAP: 0.25 // 資料數字範圍
 }
 
+// csv 輸出欄位
 const fields = [
   '代碼',
   '公司',
@@ -64,21 +65,11 @@ async function init() {
 
     //輸出檔案
     filteredDataArr.forEach((item, index) => {
-      // check if out file dir exist
+      // check folders
       if (!fs.existsSync('./out')) mkdirp('./out')
-      // check if time file dir exist
-      if (!fs.existsSync(`./out/${getDateTime()}`)) {
-        mkdirp(`./out/${getDateTime()}`, err => {
-          if (err) console.log(err)
-          else console.log('new file folder ready!')
-        })
-      }
-
+      if (!fs.existsSync(`./out/${getDateTime()}`)) mkdirp(`./out/${getDateTime()}`)
       if (!fs.existsSync(`./out/${getDateTime()}/noRef`)) mkdirp(`./out/${getDateTime()}/noRef`)
       if (!fs.existsSync(`./out/${getDateTime()}/ref`)) mkdirp(`./out/${getDateTime()}/ref`)
-
-      // fs.writeFileSync(`./out/${getDateTime()}/${item.name}.json`,
-      // JSON.stringify(item, null, 2));
 
       const csvFile = json2csvParser.parse(item.data)
 
@@ -95,8 +86,6 @@ async function init() {
           'utf8'
         )
       }
-
-
     })
   } catch (err) {
     console.log(err)
@@ -150,8 +139,6 @@ function filterData(allData, targetObj) {
       yearStatus,
       catagoryStatus
     ]
-
-    // console.log(item['公司'], statusArr)
 
     if (statusArr.filter(item => item).length === 5) {
       item['與目標<股價淨值比>差距比例'] =
