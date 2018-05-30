@@ -1,5 +1,5 @@
 // file path
-const TARGET_CORPS_FILE_PATH = './targetCorps/targetCorps.all.csv'
+const TARGET_CORPS_FILE_PATH = './targetCorps/targetCorps.csv'
 const ALL_DATA_FILE_PATH = './allData/allData.csv'
 
 // import modules
@@ -67,9 +67,12 @@ async function init() {
     filteredDataArr.forEach((item, index) => {
       // check folders
       if (!fs.existsSync('./out')) mkdirp('./out')
-      if (!fs.existsSync(`./out/${getDateTime()}`)) mkdirp(`./out/${getDateTime()}`)
-      if (!fs.existsSync(`./out/${getDateTime()}/noRef`)) mkdirp(`./out/${getDateTime()}/noRef`)
-      if (!fs.existsSync(`./out/${getDateTime()}/ref`)) mkdirp(`./out/${getDateTime()}/ref`)
+      if (!fs.existsSync(`./out/${getDateTime()}`))
+        mkdirp(`./out/${getDateTime()}`)
+      if (!fs.existsSync(`./out/${getDateTime()}/noRef`))
+        mkdirp(`./out/${getDateTime()}/noRef`)
+      if (!fs.existsSync(`./out/${getDateTime()}/ref`))
+        mkdirp(`./out/${getDateTime()}/ref`)
 
       const csvFile = json2csvParser.parse(item.data)
 
@@ -139,6 +142,8 @@ function filterData(allData, targetObj) {
       yearStatus,
       catagoryStatus
     ]
+
+    console.log(statusArr)
 
     if (statusArr.filter(item => item).length === 5) {
       item['與目標<股價淨值比>差距比例'] =
